@@ -1,0 +1,31 @@
+name: CROUS Brest
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: crous
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python crous_check.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Sauvegarde etat
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git pull --rebase || true
+          git add seen_logements.json || true
+          git diff --cached --quiet || git commit -m "maj"
+          git push || true
