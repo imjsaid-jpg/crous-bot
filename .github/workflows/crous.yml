@@ -1,7 +1,7 @@
 name: CROUS Brest
 on:
   schedule:
-    - cron: "*/6 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 permissions:
   contents: write
@@ -29,3 +29,10 @@ jobs:
           git add seen_logements.json || true
           git diff --cached --quiet || git commit -m "maj"
           git push || true
+      - name: Relance la surveillance
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/crous.yml/dispatches \
+            -d '{"ref":"main"}'
